@@ -21,16 +21,17 @@ SENTENCE_END = '</s>'
 VOCAB_SIZE = 200000
 CHUNK_SIZE = 1000 # num examples per chunk, for the chunked data
 
-SPECIAL_TOKENS = ['<EXPR>','<UNVAR>','<EQUL>', '<ARRW>', '@highlight', '<PAD>']
+SPECIAL_TOKENS = ['<EXPR>', '<UNVAR>', '<ARRW>', '<EQUL>', '<PAD>']
 KOREAN_2_SPECIAL = {'(수식)':'\N{Arabic Poetic Verse Sign}',
                      '(미지수)':'\N{Arabic Sign Misra}' ,
                      '(화살표)':'\N{Arabic Place of Sajdah}',
-                     '(등호)':'\N{Arabic Sign Sindhi Ampersand}',
-                     '@highlight':'\N{Arabic Sign Sindhi Ampersand}'}
+                     '(등호)':'\N{Arabic Sign Sindhi Ampersand}'}
 SPECIAL_2_ENG = dict(zip(['\N{Arabic Poetic Verse Sign}',
                      '\N{Arabic Sign Misra}' ,
                      '\N{Arabic Place of Sajdah}',
                      '\N{Arabic Sign Sindhi Ampersand}'], SPECIAL_TOKENS[:4]))
+
+HIGHLIGHT = "▁ @ h i g h l i g h t"
 
 def chunk_file(set_name):
     # in_file = 'finished_files/%s.bin' % set_name 
@@ -86,6 +87,8 @@ def tokenize_stories(stories_dir, tokenized_stories_dir):
     #         f.write("%s \t %s\n" % (os.path.join(stories_dir, s), os.path.join(tokenized_stories_dir, s)))
     # command = ['java', 'edu.stanford.nlp.process.PTBTokenizer', '-ioFileList', '-preserveLines', 'mapping.txt']
 
+
+
     for s in stories:
         with open(os.path.join(stories_dir, s), "r") as fr, \
                 open(os.path.join(tokenized_stories_dir, s), "w") as fw:
@@ -117,7 +120,7 @@ def read_text_file(text_file):
 
 def fix_missing_period(line):
     """Adds a period to a line that is missing a period"""
-    if "@highlight" in line: return line
+    if HIGHLIGHT in line: return line
     if line=="": return line
     if line[-1] in END_TOKENS: return line
     # print line[-1]
@@ -140,7 +143,7 @@ def get_art_abs(story_file):
     for idx,line in enumerate(lines):
         if line == "":
             continue # empty line
-        elif line.startswith("@highlight"):
+        elif line.startswith(HIGHLIGHT):
             next_is_highlight = True
         elif next_is_highlight:
             highlights.append(line)
