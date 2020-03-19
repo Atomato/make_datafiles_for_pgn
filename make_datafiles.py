@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow.core.example import example_pb2
 
 from kobert.utils import get_tokenizer
-
+from gluonnlp.data import SentencepieceTokenizer
 
 dm_single_close_quote = u'\u2019' # unicode
 dm_double_close_quote = u'\u201d'
@@ -21,6 +21,16 @@ SENTENCE_END = '</s>'
 VOCAB_SIZE = 200000
 CHUNK_SIZE = 1000 # num examples per chunk, for the chunked data
 
+SPECIAL_TOKENS = ['<EXPR>','<UNVAR>','<EQUL>', '<ARRW>', '@highlight', '<PAD>']
+KOREAN_2_SPECIAL = {'(수식)':'\N{Arabic Poetic Verse Sign}',
+                     '(미지수)':'\N{Arabic Sign Misra}' ,
+                     '(화살표)':'\N{Arabic Place of Sajdah}',
+                     '(등호)':'\N{Arabic Sign Sindhi Ampersand}',
+                     '@highlight':'\N{Arabic Sign Sindhi Ampersand}'}
+SPECIAL_2_ENG = dict(zip(['\N{Arabic Poetic Verse Sign}',
+                     '\N{Arabic Sign Misra}' ,
+                     '\N{Arabic Place of Sajdah}',
+                     '\N{Arabic Sign Sindhi Ampersand}'], SPECIAL_TOKENS[:4]))
 
 def chunk_file(set_name):
     # in_file = 'finished_files/%s.bin' % set_name 
@@ -54,7 +64,16 @@ def chunk_all():
         chunk_file(set_name)
     print("Saved chunked data in %s" % chunks_dir)
 
-    
+def kobert_tokenizer(sentence):
+    tok_path = get_tokenizer()
+    sp = SentencepieceTokenizer(tok_path)
+
+    for k,v in KOREAN_2_SPECIAL.items(): # replace special tokens
+        sentence = sentence.replace(k,v)
+    tokens = [token for token in sp(sentence)]
+    tokens = [SPECIAL_2_ENG[ele] if ele in SPECIAL_2_ENG else ele for ele in tokens]
+
+    return ' '.join(tokens)
 
 def tokenize_stories(stories_dir, tokenized_stories_dir):
     """Maps a whole directory of .story files to a tokenized version using Stanford CoreNLP Tokenizer"""
@@ -62,14 +81,23 @@ def tokenize_stories(stories_dir, tokenized_stories_dir):
     stories = os.listdir(stories_dir)
     # make IO list file
     print("Making list of files to tokenize...")
-    with open("mapping.txt", "w") as f:
-        for s in stories:
-            f.write("%s \t %s\n" % (os.path.join(stories_dir, s), os.path.join(tokenized_stories_dir, s)))
-    command = ['java', 'edu.stanford.nlp.process.PTBTokenizer', '-ioFileList', '-preserveLines', 'mapping.txt']
+    # with open("mapping.txt", "w") as f:
+    #     for s in stories:
+    #         f.write("%s \t %s\n" % (os.path.join(stories_dir, s), os.path.join(tokenized_stories_dir, s)))
+    # command = ['java', 'edu.stanford.nlp.process.PTBTokenizer', '-ioFileList', '-preserveLines', 'mapping.txt']
+
+    for s in stories:
+        with open(os.path.join(stories_dir, s), "r") as fr, \
+                open(os.path.join(tokenized_stories_dir, s), "w") as fw:
+            lines = fr.readlines()
+            for line in lines:
+                tokenized = kobert_tokenizer(line)
+                fw.write(tokenized + "\n")
+
     print("Tokenizing %i files in %s and saving in %s..." % (len(stories), stories_dir, tokenized_stories_dir))
-    subprocess.call(command)
+    # subprocess.call(command)
     print("Stanford CoreNLP Tokenizer has finished.")
-    os.remove("mapping.txt")
+    # os.remove("mapping.txt")
 
     # Check that the tokenized stories directory contains the same number of files as the original directory
     num_orig = len(os.listdir(stories_dir))
