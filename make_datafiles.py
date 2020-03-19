@@ -33,6 +33,9 @@ SPECIAL_2_ENG = dict(zip(['\N{Arabic Poetic Verse Sign}',
 
 HIGHLIGHT = "▁ @ h i g h l i g h t"
 
+TOK_PATH = get_tokenizer()
+sp = SentencepieceTokenizer(TOK_PATH)
+
 def chunk_file(set_name):
     # in_file = 'finished_files/%s.bin' % set_name 
     in_file = os.path.join(finished_files_dir, '%s.bin' % set_name)
@@ -66,9 +69,6 @@ def chunk_all():
     print("Saved chunked data in %s" % chunks_dir)
 
 def kobert_tokenizer(sentence):
-    tok_path = get_tokenizer()
-    sp = SentencepieceTokenizer(tok_path)
-
     for k,v in KOREAN_2_SPECIAL.items(): # replace special tokens
         sentence = sentence.replace(k,v)
     tokens = [token for token in sp(sentence)]
