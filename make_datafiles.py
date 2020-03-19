@@ -31,7 +31,7 @@ SPECIAL_2_ENG = dict(zip(['\N{Arabic Poetic Verse Sign}',
                      '\N{Arabic Place of Sajdah}',
                      '\N{Arabic Sign Sindhi Ampersand}'], SPECIAL_TOKENS[:4]))
 
-HIGHLIGHT = "▁ @ h i g h l i g h t"
+HIGHLIGHT = "@ h i g h l i g h t"
 
 TOK_PATH = get_tokenizer()
 sp = SentencepieceTokenizer(TOK_PATH)
