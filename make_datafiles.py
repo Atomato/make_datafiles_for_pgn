@@ -73,6 +73,7 @@ def kobert_tokenizer(sentence):
         sentence = sentence.replace(k,v)
     tokens = [token for token in sp(sentence)]
     tokens = [SPECIAL_2_ENG[ele] if ele in SPECIAL_2_ENG else ele for ele in tokens]
+    tokens = [token for token in tokens if token != "▁"]
 
     return ' '.join(tokens)
 
