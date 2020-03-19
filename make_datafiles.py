@@ -15,6 +15,8 @@ END_TOKENS = ['.', '!', '?', '...', "'", "`", '"', dm_single_close_quote, dm_dou
 # We use these to separate the summary sentences in the .bin datafiles
 SENTENCE_START = '<s>'
 SENTENCE_END = '</s>'
+
+VOCAB_SIZE = 200000
 CHUNK_SIZE = 1000 # num examples per chunk, for the chunked data
 
 
@@ -45,7 +47,7 @@ def chunk_all():
     os.mkdir(chunks_dir)
   # Chunk the data
   # for set_name in ['train', 'val', 'test']:
-  for set_name in ['test']:
+  for set_name in ['train']:
     print("Splitting %s data into chunks..." % set_name)
     chunk_file(set_name)
   print("Saved chunked data in %s" % chunks_dir)
@@ -123,14 +125,18 @@ def get_art_abs(story_file):
   return article, abstract
 
 
-def write_to_bin(out_file):
+def write_to_bin(finished_files_dir, name, makevocab=False):
+  out_file = os.path.join(finished_files_dir, name)
+    
   # story_fnames = [name for name in os.listdir(tokenized_stories_dir) if os.path.isfile(tokenized_stories_dir+'\\'+name) ]
   story_fnames = [name for name in os.listdir(tokenized_stories_dir)]
   num_stories = len(story_fnames)
   # print(story_fnames)
   # for idx,s in enumerate(story_fnames):
   #   print(idx,s)
-
+    
+  if makevocab:
+    vocab_counter = collections.Counter()
 
   with open(out_file, 'wb') as writer:
     for idx,s in enumerate(story_fnames):
@@ -158,8 +164,26 @@ def write_to_bin(out_file):
       str_len = len(tf_example_str)
       writer.write(struct.pack('q', str_len))
       writer.write(struct.pack('%ds' % str_len, tf_example_str))
+    
+      # Write the vocab to file, if applicable
+      if makevocab:
+        art_tokens = article.split(' ')
+        abs_tokens = abstract.split(' ')
+        abs_tokens = [t for t in abs_tokens if t not in [SENTENCE_START, SENTENCE_END]] # remove these tags from vocab
+        tokens = art_tokens + abs_tokens
+        tokens = [t.strip() for t in tokens] # strip
+        tokens = [t for t in tokens if t!=""] # remove empty
+        vocab_counter.update(tokens)
 
   print("Finished writing file %s\n" % out_file)
+
+  # write vocab to file
+  if makevocab:
+    print("Writing vocab file...")
+    with open(os.path.join(finished_files_dir, "vocab"), 'w') as writer:
+      for word, count in vocab_counter.most_common(VOCAB_SIZE):
+        writer.write(word + ' ' + str(count) + '\n')
+    print("Finished writing vocab file")
 
 
 if __name__ == '__main__':
@@ -184,8 +208,8 @@ if __name__ == '__main__':
   tokenize_stories(stories_dir, tokenized_stories_dir)
 
   # Read the tokenized stories, do a little postprocessing then write to bin files
-  write_to_bin(os.path.join(finished_files_dir, "test.bin"))
+#   write_to_bin(os.path.join(finished_files_dir, "test.bin"))
+  write_to_bin(finished_files_dir, name="train.bin", makevocab=True)
 
   # # Chunk the data. This splits each of train.bin, val.bin and test.bin into smaller chunks, each containing e.g. 1000 examples, and saves them in finished_files/chunks
   chunk_all()
-  
