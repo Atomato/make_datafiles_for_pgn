@@ -6,6 +6,7 @@ import subprocess
 import collections
 import tensorflow as tf
 from tensorflow.core.example import example_pb2
+import glob
 
 from kobert.utils import get_tokenizer
 from gluonnlp.data import SentencepieceTokenizer
@@ -63,7 +64,7 @@ def chunk_all():
         os.mkdir(chunks_dir)
     # Chunk the data
     # for set_name in ['train', 'val', 'test']:
-    for set_name in ['train']:
+    for set_name in ['train', 'val']:
         print("Splitting %s data into chunks..." % set_name)
         chunk_file(set_name)
     print("Saved chunked data in %s" % chunks_dir)
@@ -161,11 +162,12 @@ def get_art_abs(story_file):
     return article, abstract
 
 
-def write_to_bin(finished_files_dir, name, makevocab=False):
-    out_file = os.path.join(finished_files_dir, name)
+def write_to_bin(finished_files_dir, src_name, makevocab=False):
+    out_file = os.path.join(finished_files_dir, src_name + ".bin")
         
-    # story_fnames = [name for name in os.listdir(tokenized_stories_dir) if os.path.isfile(tokenized_stories_dir+'\\'+name) ]
-    story_fnames = [name for name in os.listdir(tokenized_stories_dir)]
+    story_fnames = [name for name in os.listdir(tokenized_stories_dir) \
+                        if name.startswith(src_name)]
+    # story_fnames = [name for name in os.listdir(tokenized_stories_dir)]
     num_stories = len(story_fnames)
     # print(story_fnames)
     # for idx,s in enumerate(story_fnames):
@@ -245,7 +247,8 @@ if __name__ == '__main__':
 
     # Read the tokenized stories, do a little postprocessing then write to bin files
 #   write_to_bin(os.path.join(finished_files_dir, "test.bin"))
-    write_to_bin(finished_files_dir, name="train.bin", makevocab=True)
+    write_to_bin(finished_files_dir, src_name="train", makevocab=True)
+    write_to_bin(finished_files_dir, src_name="val")
 
     # # Chunk the data. This splits each of train.bin, val.bin and test.bin into smaller chunks, each containing e.g. 1000 examples, and saves them in finished_files/chunks
     chunk_all()
