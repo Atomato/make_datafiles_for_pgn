@@ -42,5 +42,8 @@ if __name__ == '__main__':
     xlsx_path = sys.argv[1]
     stories_dir = sys.argv[2]
 
+    # Create some new directories
+    if not os.path.exists(stories_dir): os.makedirs(stories_dir)
+
     xlsx2stories(xlsx_path, stories_dir)
 
