@@ -7,7 +7,7 @@ It processes your .xlsx file into the binary format expected by the [code](https
 ## 1. Process .xlsx file into .story file
 USAGE: python make_stories.py <xlsx_path> <stories_dir>
 ```
-python make_stories.py data/paraphrasing\ data_DH.xlsx stories/ 
+python make_stories.py data/paraphrase_data.xlsx stories/ 
 ```
 
 ## 2. Process .story file into .bin
