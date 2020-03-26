@@ -175,7 +175,7 @@ def write_to_bin(finished_files_dir, src_name, makevocab=False):
             else:
                 print('Error: no data.')
 
-            Get the strings to write to .bin file
+            # Get the strings to write to .bin file
             article, abstract = get_art_abs(story_file)
 
             # Write to tf.Example

@@ -15,7 +15,7 @@ def xlsx2stories(xlsx_path, stories_dir):
 
     pairs_len = len(pairs) # 페어 개수
 
-    train_num = (pairs_len // 20) * 19 # train 페어 개수
+    train_num = (pairs_len // 10) * 8 # train 페어 개수
     pairs_train = pairs[:train_num] 
     pairs_val = pairs[train_num:] 
 
