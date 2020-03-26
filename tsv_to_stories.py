@@ -35,7 +35,6 @@ def tsv2stories(tsv_dir, stories_dir):
                 if chunk == '': continue # empty chunk
 
                 with open(os.path.join(stories_dir, 'test%d.story'%idx), "w") as fout:
-                    print(os.path.join(tsv_dir, fname), file=fout)
                     print(chunk, file=fout)
                     print("\n@highlight\n", file = fout)
                     print(chunk, file=fout)
