@@ -3,10 +3,10 @@ import os
 import pandas as pd
 
 # convert dataset from xlsx to story (format : sentence1 \n\n@highlight\n\n sentence2)
-def xlsx2stories(xlsx_path, stories_dir):
+def xlsx2stories(xlsx_path, train_dir, val_dir):
     """
     :param xlsx_path: path of dataset file
-    :param stories_dir: path of output dir
+    :param train_dir, val_dir: path of output dir
     """
 
     # 파일을 읽고 줄로 분리
@@ -21,29 +21,34 @@ def xlsx2stories(xlsx_path, stories_dir):
 
     # story 파일로 변환
     for idx, pair in enumerate(pairs_train):
-        with open(os.path.join(stories_dir, 'train%d.story'%idx), 'w') as fout:   
+        with open(os.path.join(train_dir, 'train%d.story'%idx), 'w') as fout:
             print(pair[0], file = fout)
             print("\n@highlight\n", file = fout)
             print(pair[1], file = fout)
 
     for idx, pair in enumerate(pairs_val):
-        with open(os.path.join(stories_dir, 'val%d.story'%idx), 'w') as fout:   
+        with open(os.path.join(val_dir, 'val%d.story'%idx), 'w') as fout:
             print(pair[0], file = fout)
             print("\n@highlight\n", file = fout)
             print(pair[1], file = fout)
 
-    print('Source data has been converted from "{0}" to "{1}".'.format(xlsx_path, stories_dir))
+    print('Source data has been converted from "{0}" to "{1} and {2}".'\
+                                .format(xlsx_path, train_dir, val_dir))
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print("USAGE: python make_stories.py <xlsx_path> <stories_dir>")
+    if len(sys.argv) != 2:
+        print("USAGE: python make_stories.py <xlsx_path>")
         sys.exit()
 
     xlsx_path = sys.argv[1]
-    stories_dir = sys.argv[2]
+
+    stories_dir = "./stories"
+    train_dir = os.path.join(stories_dir, 'train')
+    val_dir = os.path.join(stories_dir, 'val')
 
     # Create some new directories
-    if not os.path.exists(stories_dir): os.makedirs(stories_dir)
+    if not os.path.exists(train_dir): os.makedirs(train_dir)
+    if not os.path.exists(val_dir): os.makedirs(val_dir)
 
-    xlsx2stories(xlsx_path, stories_dir)
+    xlsx2stories(xlsx_path, train_dir, val_dir)
 
