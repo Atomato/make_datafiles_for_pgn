@@ -58,12 +58,12 @@ def chunk_file(set_name):
             chunk += 1
 
 
-def chunk_all():
+def chunk_all(chunks_dir, set_name_list):
     # Make a dir to hold the chunks
     if not os.path.isdir(chunks_dir):
         os.mkdir(chunks_dir)
     # Chunk the data
-    for set_name in ['train', 'val']:
+    for set_name in set_name_list:
         print("Splitting %s data into chunks..." % set_name)
         chunk_file(set_name)
     print("Saved chunked data in %s" % chunks_dir)
@@ -77,30 +77,39 @@ def kobert_tokenizer(sentence):
 
     return ' '.join(tokens)
 
-def tokenize_stories(stories_dir, tokenized_stories_dir):
+def tokenize_stories(stories_dir, tokenized_stories_dir, set_name_list):
     # Maps a whole directory of .story files to a tokenized version
     print("Preparing to tokenize %s to %s..." % (stories_dir, tokenized_stories_dir))
-    stories = os.listdir(stories_dir)
-    # make IO list file
-    print("Making list of files to tokenize...")
 
-    for s in stories:
-        with open(os.path.join(stories_dir, s), "r") as fr, \
-                open(os.path.join(tokenized_stories_dir, s), "w") as fw:
-            lines = fr.readlines()
-            for line in lines:
-                tokenized = kobert_tokenizer(line)
-                fw.write(tokenized + "\n")
+    for set_name in set_name_list:
+        set_dir = os.path.join(stories_dir, set_name) # E.g. ./stories/train
 
-    print("Tokenizing %i files in %s and saving in %s..." % (len(stories), stories_dir, tokenized_stories_dir))
-    print("Stanford CoreNLP Tokenizer has finished.")
+        stories = os.listdir(set_dir) # E.g. [tain0.story ...]
 
-    # Check that the tokenized stories directory contains the same number of files as the original directory
-    num_orig = len(os.listdir(stories_dir))
-    num_tokenized = len(os.listdir(tokenized_stories_dir))
-    if num_orig != num_tokenized:
-        raise Exception("The tokenized stories directory %s contains %i files, but it should contain the same number as %s (which has %i files). Was there an error during tokenization?" % (tokenized_stories_dir, num_tokenized, stories_dir, num_orig))
-    print("Successfully finished tokenizing %s to %s.\n" % (stories_dir, tokenized_stories_dir))
+        # E.g. ./tokenized_stories_dir/train
+        out_dir = os.path.join(os.path.join(tokenized_stories_dir, set_name))
+        if not os.path.exists(out_dir): os.makedirs(out_dir)
+
+        for s in stories:
+            with open(os.path.join(set_dir, s), "r") as fr, \
+                    open(os.path.join(out_dir, s), "w") as fw:
+                lines = fr.readlines()
+                for line in lines:
+                    tokenized = kobert_tokenizer(line)
+                    fw.write(tokenized + "\n")
+
+        '''
+        Check that the tokenized stories directory contains 
+        the same number of files as the original directory
+        '''
+        num_orig = len(stories)
+        num_tokenized = len(os.listdir(out_dir))
+        if num_orig != num_tokenized:
+            raise Exception("The tokenized stories directory contains %i files, \
+                but it should contain the same number as %s (which has %i files). \
+                Was there an error during tokenization?" % \
+                (num_tokenized, set_dir, num_orig))
+        print("Successfully finished tokenizing %s.\n" % (set_dir))
 
 
 def read_text_file(text_file):
@@ -126,8 +135,12 @@ def get_art_abs(story_file):
     # Lowercase everything
     lines = [line.lower() for line in lines]
 
-    # Put periods on the ends of lines that are missing them (this is a problem in the dataset because many image captions don't end in periods; consequently they end up in the body of the article as run-on sentences)
-    lines = [fix_missing_period(line) for line in lines]
+    '''
+    Put periods on the ends of lines that are missing them 
+    (this is a problem in the dataset because many image captions don't end in periods;
+    consequently they end up in the body of the article as run-on sentences)
+    '''
+    # lines = [fix_missing_period(line) for line in lines]
 
     # Separate out article and abstract sentences
     article_lines = []
@@ -152,26 +165,23 @@ def get_art_abs(story_file):
     return article, abstract
 
 
-def write_to_bin(finished_files_dir, src_name, makevocab=False):
+def write_to_bin(tokenized_stories_dir, src_name, finished_files_dir, makevocab=False):
+    # E.g. ./output/finished_files/train.bin
     out_file = os.path.join(finished_files_dir, src_name + ".bin")
-        
-    story_fnames = [name for name in os.listdir(tokenized_stories_dir) \
-                        if name.startswith(src_name)]
-    num_stories = len(story_fnames)
+    
+    # E.g. ./output/tokenized_stories_dir/train
+    set_dir = os.path.join(tokenized_stories_dir, src_name)
+    # E.g. [tain0.story ...]
+    story_fnames = [name for name in os.listdir(set_dir)]
         
     if makevocab:
         vocab_counter = collections.Counter()
 
     with open(out_file, 'wb') as writer:
-        for idx,s in enumerate(story_fnames):
-            if idx % 1000 == 0:
-                print("Writing story %i of %i; %.2f percent done" % (idx, num_stories, float(idx)*100.0/float(num_stories)))
-
+        for idx, s in enumerate(story_fnames):
             # Look in the tokenized story dirs to find the .story file corresponding to this url
-            if os.path.isfile(os.path.join(tokenized_stories_dir, s)):
-                story_file = os.path.join(tokenized_stories_dir, s)
-                print(story_file)
-
+            if os.path.isfile(os.path.join(set_dir, s)):
+                story_file = os.path.join(set_dir, s)
             else:
                 print('Error: no data.')
 
@@ -209,11 +219,8 @@ def write_to_bin(finished_files_dir, src_name, makevocab=False):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print("USAGE: python make_datafiles.py <stories_dir> <out_dir>")
-        sys.exit()
-    stories_dir = sys.argv[1]
-    out_dir = sys.argv[2]
+    stories_dir = "./stories"
+    out_dir = './output'
 
     tokenized_stories_dir = os.path.join(out_dir, "tokenized_stories_dir")
     finished_files_dir = os.path.join(out_dir, "finished_files")
@@ -223,12 +230,14 @@ if __name__ == '__main__':
     if not os.path.exists(tokenized_stories_dir): os.makedirs(tokenized_stories_dir)
     if not os.path.exists(finished_files_dir): os.makedirs(finished_files_dir)
 
+    set_name_list = ['train', 'val']
+
     # Run tokenizer on both stories dirs, outputting to tokenized stories directories
-    tokenize_stories(stories_dir, tokenized_stories_dir)
+    tokenize_stories(stories_dir, tokenized_stories_dir, set_name_list)
 
     # Read the tokenized stories, do a little postprocessing then write to bin files
-    write_to_bin(finished_files_dir, src_name="train", makevocab=True)
-    write_to_bin(finished_files_dir, src_name="val")
+    write_to_bin(tokenized_stories_dir, "train", finished_files_dir, makevocab=True)
+    write_to_bin(tokenized_stories_dir, "val", finished_files_dir, )
 
     # # Chunk the data. This splits each of train.bin, val.bin and test.bin into smaller chunks, each containing e.g. 1000 examples, and saves them in finished_files/chunks
-    chunk_all()
+    chunk_all(chunks_dir, set_name_list)
