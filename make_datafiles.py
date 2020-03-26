@@ -230,14 +230,15 @@ if __name__ == '__main__':
     if not os.path.exists(tokenized_stories_dir): os.makedirs(tokenized_stories_dir)
     if not os.path.exists(finished_files_dir): os.makedirs(finished_files_dir)
 
-    set_name_list = ['train', 'val']
+    set_name_list = ['train', 'val', 'test']
 
     # Run tokenizer on both stories dirs, outputting to tokenized stories directories
     tokenize_stories(stories_dir, tokenized_stories_dir, set_name_list)
 
     # Read the tokenized stories, do a little postprocessing then write to bin files
     write_to_bin(tokenized_stories_dir, "train", finished_files_dir, makevocab=True)
-    write_to_bin(tokenized_stories_dir, "val", finished_files_dir, )
+    write_to_bin(tokenized_stories_dir, "val", finished_files_dir)
+    write_to_bin(tokenized_stories_dir, "test", finished_files_dir)
 
     # # Chunk the data. This splits each of train.bin, val.bin and test.bin into smaller chunks, each containing e.g. 1000 examples, and saves them in finished_files/chunks
     chunk_all(chunks_dir, set_name_list)
