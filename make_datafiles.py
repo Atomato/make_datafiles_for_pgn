@@ -63,7 +63,6 @@ def chunk_all():
     if not os.path.isdir(chunks_dir):
         os.mkdir(chunks_dir)
     # Chunk the data
-    # for set_name in ['train', 'val', 'test']:
     for set_name in ['train', 'val']:
         print("Splitting %s data into chunks..." % set_name)
         chunk_file(set_name)
@@ -79,17 +78,11 @@ def kobert_tokenizer(sentence):
     return ' '.join(tokens)
 
 def tokenize_stories(stories_dir, tokenized_stories_dir):
-    """Maps a whole directory of .story files to a tokenized version using Stanford CoreNLP Tokenizer"""
+    # Maps a whole directory of .story files to a tokenized version
     print("Preparing to tokenize %s to %s..." % (stories_dir, tokenized_stories_dir))
     stories = os.listdir(stories_dir)
     # make IO list file
     print("Making list of files to tokenize...")
-    # with open("mapping.txt", "w") as f:
-    #     for s in stories:
-    #         f.write("%s \t %s\n" % (os.path.join(stories_dir, s), os.path.join(tokenized_stories_dir, s)))
-    # command = ['java', 'edu.stanford.nlp.process.PTBTokenizer', '-ioFileList', '-preserveLines', 'mapping.txt']
-
-
 
     for s in stories:
         with open(os.path.join(stories_dir, s), "r") as fr, \
@@ -100,9 +93,7 @@ def tokenize_stories(stories_dir, tokenized_stories_dir):
                 fw.write(tokenized + "\n")
 
     print("Tokenizing %i files in %s and saving in %s..." % (len(stories), stories_dir, tokenized_stories_dir))
-    # subprocess.call(command)
     print("Stanford CoreNLP Tokenizer has finished.")
-    # os.remove("mapping.txt")
 
     # Check that the tokenized stories directory contains the same number of files as the original directory
     num_orig = len(os.listdir(stories_dir))
@@ -155,8 +146,7 @@ def get_art_abs(story_file):
     # Make article into a single string
     article = ' '.join(article_lines)
 
-    # Make abstract into a signle string, putting <s> and </s> tags around the sentences
-    # abstract = ' '.join(["%s %s %s" % (SENTENCE_START, sent, SENTENCE_END) for sent in highlights])
+    # Make abstract into a signle string
     abstract = ' '.join([sent for sent in highlights])
 
     return article, abstract
@@ -167,11 +157,7 @@ def write_to_bin(finished_files_dir, src_name, makevocab=False):
         
     story_fnames = [name for name in os.listdir(tokenized_stories_dir) \
                         if name.startswith(src_name)]
-    # story_fnames = [name for name in os.listdir(tokenized_stories_dir)]
     num_stories = len(story_fnames)
-    # print(story_fnames)
-    # for idx,s in enumerate(story_fnames):
-    #   print(idx,s)
         
     if makevocab:
         vocab_counter = collections.Counter()
@@ -189,10 +175,8 @@ def write_to_bin(finished_files_dir, src_name, makevocab=False):
             else:
                 print('Error: no data.')
 
-    #     # Get the strings to write to .bin file
+            Get the strings to write to .bin file
             article, abstract = get_art_abs(story_file)
-            # print('article:', article)
-            # print('abstract:', abstract)
 
             # Write to tf.Example
             tf_example = example_pb2.Example()
@@ -230,23 +214,19 @@ if __name__ == '__main__':
         sys.exit()
     stories_dir = sys.argv[1]
     out_dir = sys.argv[2]
-    # print(stories_dir)
-    # tokenized_stories_dir = "data/tokenized_stories_dir"
-    # finished_files_dir = "data/finished_files"
+
     tokenized_stories_dir = os.path.join(out_dir, "tokenized_stories_dir")
-    finished_files_dir = os.path.join(out_dir, "finished_files") 
-    
+    finished_files_dir = os.path.join(out_dir, "finished_files")
     chunks_dir = os.path.join(finished_files_dir, "chunked")
     
     # Create some new directories
     if not os.path.exists(tokenized_stories_dir): os.makedirs(tokenized_stories_dir)
     if not os.path.exists(finished_files_dir): os.makedirs(finished_files_dir)
 
-    # Run stanford tokenizer on both stories dirs, outputting to tokenized stories directories
+    # Run tokenizer on both stories dirs, outputting to tokenized stories directories
     tokenize_stories(stories_dir, tokenized_stories_dir)
 
     # Read the tokenized stories, do a little postprocessing then write to bin files
-#   write_to_bin(os.path.join(finished_files_dir, "test.bin"))
     write_to_bin(finished_files_dir, src_name="train", makevocab=True)
     write_to_bin(finished_files_dir, src_name="val")
 
