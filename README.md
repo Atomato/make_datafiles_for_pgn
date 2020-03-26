@@ -5,15 +5,15 @@ It processes your .xlsx file into the binary format expected by the [code](https
 
 # How to use?
 ## 1. Process .xlsx file into .story file
-USAGE: python make_stories.py <xlsx_path> <stories_dir>
+USAGE: python make_stories.py <xlsx_path>
 ```
-python make_stories.py data/paraphrase_data.xlsx stories/ 
+python make_stories.py data/paraphrase_data.xlsx
 ```
 
 ## 2. Process .story file into .bin
-USAGE : python make_datafiles.py <stories_dir> <out_dir>
+USAGE : python make_datafiles.py
 ```
-python make_datafiles.py  stories/  output/
+python make_datafiles.py
 ```
 ## 3. Use the output data
 Copy the output data to path/to/Reinforce-Paraphrase-Generation/data/kor/
