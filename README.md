@@ -21,5 +21,5 @@ Copy the output data to path/to/Reinforce-Paraphrase-Generation/data/kor/
 cp ./output/finished_files/vocab path/to/Reinforce-Paraphrase-Generation/data/kor/
 cp ./output/finished_files/chunked/train_000.bin path/to/Reinforce-Paraphrase-Generation/data/kor/chunked/train_000.bin
 cp ./output/finished_files/chunked/val_000.bin path/to/Reinforce-Paraphrase-Generation/data/kor/chunked/val_000.bin
-cp ./output/finished_files/chunked/val_000.bin path/to/Reinforce-Paraphrase-Generation/data/kor/chunked/test_000.bin
+cp ./output/finished_files/chunked/test_000.bin path/to/Reinforce-Paraphrase-Generation/data/kor/chunked/test_000.bin
 ```
