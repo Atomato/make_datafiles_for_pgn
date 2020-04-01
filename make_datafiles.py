@@ -22,17 +22,19 @@ SENTENCE_END = '</s>'
 VOCAB_SIZE = 200000
 CHUNK_SIZE = 1000 # num examples per chunk, for the chunked data
 
-SPECIAL_TOKENS = ['<EXPR>', '<UNVAR>', '<ARRW>', '<EQUL>', '<PAD>']
+SPECIAL_TOKENS = ['<EXPR>', '<UNVAR>', '<ARRW>', '<EQUL>', '<INEQ>']
 KOREAN_2_SPECIAL = {'(수식)':'\N{Arabic Poetic Verse Sign}',
                      '(미지수)':'\N{Arabic Sign Misra}' ,
                      '(화살표)':'\N{Arabic Place of Sajdah}',
-                     '(등호)':'\N{Arabic Sign Sindhi Ampersand}'}
+                     '(등호)':'\N{Arabic Sign Sindhi Ampersand}',
+                     '(부등호)':'\N{ARABIC SEMICOLON}'}
 SPECIAL_2_ENG = dict(zip(['\N{Arabic Poetic Verse Sign}',
-                     '\N{Arabic Sign Misra}' ,
+                     '\N{Arabic Sign Misra}',
                      '\N{Arabic Place of Sajdah}',
-                     '\N{Arabic Sign Sindhi Ampersand}'], SPECIAL_TOKENS[:4]))
+                     '\N{Arabic Sign Sindhi Ampersand}',
+                     '\N{ARABIC SEMICOLON}'], SPECIAL_TOKENS))
 
-HIGHLIGHT = "@ h i g h l i g h t"
+HIGHLIGHT = "▁ @ h i g h l i g h t"
 
 TOK_PATH = get_tokenizer()
 sp = SentencepieceTokenizer(TOK_PATH)
@@ -73,7 +75,7 @@ def kobert_tokenizer(sentence):
         sentence = sentence.replace(k,v)
     tokens = [token for token in sp(sentence)]
     tokens = [SPECIAL_2_ENG[ele] if ele in SPECIAL_2_ENG else ele for ele in tokens]
-    tokens = [token for token in tokens if token != "▁"]
+    # tokens = [token for token in tokens if token != "▁"]
 
     return ' '.join(tokens)
 
@@ -119,28 +121,11 @@ def read_text_file(text_file):
             lines.append(line.strip())
     return lines
 
-
-def fix_missing_period(line):
-    """Adds a period to a line that is missing a period"""
-    if HIGHLIGHT in line: return line
-    if line=="": return line
-    if line[-1] in END_TOKENS: return line
-    # print line[-1]
-    return line + " ."
-
-
 def get_art_abs(story_file):
     lines = read_text_file(story_file)
 
     # Lowercase everything
     lines = [line.lower() for line in lines]
-
-    '''
-    Put periods on the ends of lines that are missing them 
-    (this is a problem in the dataset because many image captions don't end in periods;
-    consequently they end up in the body of the article as run-on sentences)
-    '''
-    # lines = [fix_missing_period(line) for line in lines]
 
     # Separate out article and abstract sentences
     article_lines = []
