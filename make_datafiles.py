@@ -8,7 +8,6 @@ import tensorflow as tf
 from tensorflow.core.example import example_pb2
 import glob
 
-from kobert.utils import get_tokenizer
 from gluonnlp.data import SentencepieceTokenizer
 
 dm_single_close_quote = u'\u2019' # unicode
@@ -22,22 +21,15 @@ SENTENCE_END = '</s>'
 VOCAB_SIZE = 200000
 CHUNK_SIZE = 1000 # num examples per chunk, for the chunked data
 
-SPECIAL_TOKENS = ['<EXPR>', '<UNVAR>', '<ARRW>', '<EQUL>', '<INEQ>']
-KOREAN_2_SPECIAL = {'(수식)':'\N{Arabic Poetic Verse Sign}',
-                     '(미지수)':'\N{Arabic Sign Misra}' ,
-                     '(화살표)':'\N{Arabic Place of Sajdah}',
-                     '(등호)':'\N{Arabic Sign Sindhi Ampersand}',
-                     '(부등호)':'\N{ARABIC SEMICOLON}'}
-SPECIAL_2_ENG = dict(zip(['\N{Arabic Poetic Verse Sign}',
-                     '\N{Arabic Sign Misra}',
-                     '\N{Arabic Place of Sajdah}',
-                     '\N{Arabic Sign Sindhi Ampersand}',
-                     '\N{ARABIC SEMICOLON}'], SPECIAL_TOKENS))
+KOREAN_2_SPECIAL = {'(수식)': '[EXPR]',
+                     '(미지수)': '[UNVAR]' ,
+                     '(화살표)': '[ARRW]',
+                     '(등호)': '[EQUL]',
+                     '(부등호)': '[INEQ]'}
 
 HIGHLIGHT = "▁ @ h i g h l i g h t"
 
-TOK_PATH = get_tokenizer()
-sp = SentencepieceTokenizer(TOK_PATH)
+sp = SentencepieceTokenizer("./data/kobert_new.spiece")
 
 def chunk_file(set_name):
     # in_file = 'finished_files/%s.bin' % set_name 
@@ -71,11 +63,10 @@ def chunk_all(chunks_dir, set_name_list):
     print("Saved chunked data in %s" % chunks_dir)
 
 def kobert_tokenizer(sentence):
+    sentence = sentence.lower()
     for k,v in KOREAN_2_SPECIAL.items(): # replace special tokens
-        sentence = sentence.replace(k,v)
-    tokens = [token for token in sp(sentence)]
-    tokens = [SPECIAL_2_ENG[ele] if ele in SPECIAL_2_ENG else ele for ele in tokens]
-    # tokens = [token for token in tokens if token != "▁"]
+        sentence = sentence.replace(k, v)
+    tokens = [token.strip() for token in sp(sentence)]
 
     return ' '.join(tokens)
 
@@ -123,9 +114,6 @@ def read_text_file(text_file):
 
 def get_art_abs(story_file):
     lines = read_text_file(story_file)
-
-    # Lowercase everything
-    lines = [line.lower() for line in lines]
 
     # Separate out article and abstract sentences
     article_lines = []
