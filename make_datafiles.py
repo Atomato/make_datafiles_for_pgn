@@ -9,6 +9,7 @@ from tensorflow.core.example import example_pb2
 import glob
 
 from gluonnlp.data import SentencepieceTokenizer
+from kogpt2.utils import get_tokenizer
 
 dm_single_close_quote = u'\u2019' # unicode
 dm_double_close_quote = u'\u201d'
@@ -21,15 +22,10 @@ SENTENCE_END = '</s>'
 VOCAB_SIZE = 200000
 CHUNK_SIZE = 1000 # num examples per chunk, for the chunked data
 
-KOREAN_2_SPECIAL = {'(수식)': '[EXPR]',
-                     '(미지수)': '[UNVAR]' ,
-                     '(화살표)': '[ARRW]',
-                     '(등호)': '[EQUL]',
-                     '(부등호)': '[INEQ]'}
+HIGHLIGHT = "▁@ h igh l ight"
 
-HIGHLIGHT = "▁ @ h i g h l i g h t"
-
-sp = SentencepieceTokenizer("./data/kobert_new.spiece")
+tok_path = get_tokenizer()
+sp = SentencepieceTokenizer(tok_path)
 
 def chunk_file(set_name):
     # in_file = 'finished_files/%s.bin' % set_name 
@@ -64,10 +60,8 @@ def chunk_all(chunks_dir, set_name_list):
 
 def kobert_tokenizer(sentence):
     sentence = sentence.lower()
-    for k,v in KOREAN_2_SPECIAL.items(): # replace special tokens
-        sentence = sentence.replace(k, v)
-    tokens = [token.strip() for token in sp(sentence)]
 
+    tokens = [token.strip() for token in sp(sentence)]
     return ' '.join(tokens)
 
 def tokenize_stories(stories_dir, tokenized_stories_dir, set_name_list):
